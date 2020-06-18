@@ -332,13 +332,16 @@ function OpenVehicleSpawnerMenu(type, station, part, partNum)
 		elseif data.current.action == 'garage' then
 			local foundSpawn, spawnPoint = GetAvailableVehicleSpawnPoint(station, part, partNum)
 			local elements = {}
-
+			
+			if type == 'car' then
 				ESX.TriggerServerCallback('esx_society:getVehiclesInGarage', function(vehicles)
 					for i=1, #vehicles, 1 do
-						table.insert(elements, {
-							label = GetDisplayNameFromVehicleModel(vehicles[i].model) .. ' [' .. vehicles[i].plate .. ']',
-							value = vehicles[i]
-						})
+						if not IsThisModelAHeli(vehicles[i].model) then
+							table.insert(elements, {
+								label = GetDisplayNameFromVehicleModel(vehicles[i].model) .. ' [' .. vehicles[i].plate .. ']',
+								value = vehicles[i]
+							})
+						end
 					end
 
 					ESX.UI.Menu.Open('default', GetCurrentResourceName(), 'vehicle_spawner', {
@@ -361,6 +364,38 @@ function OpenVehicleSpawnerMenu(type, station, part, partNum)
 						menu.close()
 					end)
 				end, 'police')
+			elseif type == 'helicopter' then
+				ESX.TriggerServerCallback('esx_society:getVehiclesInGarage', function(vehicles)
+					for i=1, #vehicles, 1 do
+						if IsThisModelAHeli(vehicles[i].model) then
+							table.insert(elements, {
+								label = GetDisplayNameFromVehicleModel(vehicles[i].model) .. ' [' .. vehicles[i].plate .. ']',
+								value = vehicles[i]
+							})
+						end
+					end
+
+					ESX.UI.Menu.Open('default', GetCurrentResourceName(), 'vehicle_spawner', {
+						title    = _U('service_vehicle'),
+						align    = 'top-left',
+						elements = elements
+					}, function(data, menu)
+						menu.close()
+						local vehicleProps = data.current.value
+
+						ESX.Game.SpawnVehicle(vehicleProps.model, spawnPoint.coords, spawnPoint.heading, function(vehicle)
+							ESX.Game.SetVehicleProperties(vehicle, vehicleProps)
+							local playerPed = PlayerPedId()
+							TaskWarpPedIntoVehicle(playerPed,  vehicle,  -1)
+						end)
+
+						TriggerServerEvent('esx_society:removeVehicleFromGarage', 'police', vehicleProps)
+						ESX.ShowNotification(_U('garage_released'))
+					end, function(data, menu)
+						menu.close()
+					end)
+				end, 'police')
+			end
 
 		elseif data.current.action == 'store_garage' then
 			StoreNearbyVehicle(playerCoords)

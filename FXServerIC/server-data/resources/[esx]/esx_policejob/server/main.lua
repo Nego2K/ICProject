@@ -351,6 +351,7 @@ ESX.RegisterServerCallback('esx_policejob:removeArmoryWeapon', function(source, 
 		store.set('weapons', weapons)
 		cb()
 	end)
+	
 end)
 
 ESX.RegisterServerCallback('esx_policejob:buyWeapon', function(source, cb, weaponName, type, componentNum)
@@ -374,7 +375,7 @@ ESX.RegisterServerCallback('esx_policejob:buyWeapon', function(source, cb, weapo
 			if account.money >= selectedWeapon.price then
 				account.removeMoney(selectedWeapon.price)
 				xPlayer.addWeapon(weaponName, 100)
-
+				
 				cb(true)
 			else
 				cb(false)
@@ -403,6 +404,9 @@ ESX.RegisterServerCallback('esx_policejob:buyWeapon', function(source, cb, weapo
 		end
 		end)
 	end
+	TriggerEvent('esx_xpSystem:GetDataEXP', xPlayer.identifier,  function(xp)
+		xp.set('police', 5)
+	end)
 end)
 
 
